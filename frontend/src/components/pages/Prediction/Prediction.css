@@ -1,0 +1,565 @@
+/* Page */
+.predPage {
+  background: #f6f8fb;
+  min-height: 100vh;
+  padding: 22px 22px 28px;
+  color: #0b1220;
+}
+
+/* Header */
+.predHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.predTitle {
+  font-size: 38px;
+  margin: 0;
+  font-weight: 900;
+  letter-spacing: -0.6px;
+}
+
+.predSubtitle {
+  margin: 6px 0 0;
+  color: #4a5a73;
+  font-weight: 700;
+}
+
+.predHeaderRight {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ghostBtn {
+  border: 1px solid #e1e8f2;
+  background: #eef3fa;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-weight: 900;
+  cursor: pointer;
+  color: #2f3a4c;
+}
+
+.ghostBtn:hover {
+  background: #e7effb;
+}
+
+/* Grid */
+.predGrid {
+  display: grid;
+  grid-template-columns: 420px 1fr;
+  gap: 18px;
+  align-items: start;
+}
+
+/* Card */
+.card {
+  background: #ffffff;
+  border: 1px solid #e8edf3;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 10px 20px rgba(10, 20, 40, 0.06);
+}
+
+/* Card Head */
+.cardHead {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.cardIcon {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: #eaf2ff;
+  display: grid;
+  place-items: center;
+  color: #1e66ff;
+  font-weight: 900;
+}
+
+.cardTitle {
+  font-weight: 900;
+  font-size: 18px;
+}
+
+.cardHint {
+  margin-top: 2px;
+  font-size: 12px;
+  color: #60708a;
+  font-weight: 700;
+}
+
+/* Form blocks */
+.formBlock {
+  margin-top: 14px;
+}
+
+.label {
+  display: block;
+  font-size: 13px;
+  font-weight: 900;
+  color: #2f3a4c;
+  margin-bottom: 8px;
+}
+
+.textInput {
+  width: 100%;
+  padding: 12px 12px;
+  border-radius: 12px;
+  border: 1px solid #e1e8f2;
+  background: #ffffff;
+  font-weight: 800;
+  outline: none;
+}
+
+.textInput:focus {
+  border-color: #1e66ff;
+}
+
+/* Select */
+.selectWrap {
+  position: relative;
+}
+
+.select {
+  width: 100%;
+  padding: 12px 12px;
+  border-radius: 12px;
+  border: 1px solid #e1e8f2;
+  background: #ffffff;
+  font-weight: 800;
+  outline: none;
+  appearance: none;
+}
+
+.select:focus {
+  border-color: #1e66ff;
+}
+
+.selectArrow {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #60708a;
+  pointer-events: none;
+}
+
+/* Segmented severity / model */
+.segmented {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.segBtn {
+  border: 1px solid #e1e8f2;
+  background: #ffffff;
+  padding: 10px 10px;
+  border-radius: 12px;
+  font-weight: 900;
+  cursor: pointer;
+  color: #2f3a4c;
+}
+
+.segBtn:hover {
+  background: #f3f7ff;
+}
+
+.segBtn.active {
+  border-color: #1e66ff;
+  background: #eaf2ff;
+  color: #1e66ff;
+}
+
+/* Range row */
+.rangeRow {
+  display: grid;
+  grid-template-columns: 1fr 40px;
+  gap: 12px;
+  align-items: center;
+}
+
+.range {
+  width: 100%;
+  accent-color: #1e66ff;
+}
+
+.rangeValue {
+  font-weight: 900;
+  color: #1e66ff;
+  text-align: center;
+}
+
+.smallNote {
+  margin-top: 8px;
+  color: #60708a;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* Time */
+.timeRow {
+  position: relative;
+}
+
+.timeInput {
+  width: 100%;
+  padding: 12px 12px;
+  border-radius: 12px;
+  border: 1px solid #e1e8f2;
+  background: #ffffff;
+  font-weight: 800;
+  outline: none;
+}
+
+.timeInput:focus {
+  border-color: #1e66ff;
+}
+
+.timeIcon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0.7;
+}
+
+.toggles {
+  display: flex;
+  gap: 14px;
+  margin-top: 10px;
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #2f3a4c;
+}
+
+.toggle input {
+  accent-color: #1e66ff;
+}
+
+/* Primary button */
+.primaryBtn {
+  width: 100%;
+  margin-top: 16px;
+  padding: 14px 14px;
+  border: none;
+  border-radius: 12px;
+  font-weight: 900;
+  cursor: pointer;
+  background: #1e66ff;
+  color: #ffffff;
+}
+
+.primaryBtn:hover {
+  background: #1656da;
+}
+
+.primaryBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Error */
+.errorBox {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid #ffd1d1;
+  background: #fff1f1;
+  color: #9b1c1c;
+  font-weight: 800;
+  font-size: 12px;
+}
+
+/* Output top */
+.outputTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.outputLabel {
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.8px;
+  color: #1e66ff;
+}
+
+.outputTitle {
+  margin-top: 6px;
+  font-size: 26px;
+  font-weight: 900;
+}
+
+.ringWrap {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+}
+
+.ringCaption {
+  font-size: 11px;
+  font-weight: 900;
+  color: #60708a;
+}
+
+/* Confidence ring */
+.ring {
+  position: relative;
+  width: 90px;
+  height: 90px;
+}
+
+.ringText {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-weight: 900;
+  font-size: 18px;
+  color: #1e66ff;
+}
+
+.ringBg {
+  fill: none;
+  stroke: #e8edf3;
+  stroke-width: 8;
+}
+
+.ringFg {
+  fill: none;
+  stroke: #1e66ff;
+  stroke-width: 8;
+  stroke-linecap: round;
+  transform: rotate(-90deg);
+  transform-origin: 45px 45px;
+}
+
+/* Alert card */
+.alertCard {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 12px;
+  align-items: center;
+
+  background: #f3f7ff;
+  border: 1px solid #d8e6ff;
+  border-left: 4px solid #1e66ff;
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.alertIcon {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: #eaf2ff;
+  display: grid;
+  place-items: center;
+  font-weight: 900;
+  color: #1e66ff;
+}
+
+.alertTitle {
+  font-weight: 900;
+  font-size: 16px;
+  color: #0b1220;
+}
+
+.alertSub {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #4a5a73;
+  font-weight: 800;
+  line-height: 1.5;
+}
+
+/* Probabilities */
+.probSection {
+  margin-top: 18px;
+}
+
+.probTitle {
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.8px;
+  color: #60708a;
+  margin-bottom: 12px;
+}
+
+.emptyProbs {
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px dashed #d5dde8;
+  color: #60708a;
+  font-weight: 800;
+  font-size: 12px;
+}
+
+.probRow {
+  margin-bottom: 12px;
+}
+
+.probTop {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  font-size: 12px;
+  font-weight: 900;
+  color: #2f3a4c;
+}
+
+.probPct {
+  color: #1e66ff;
+}
+
+.probBg {
+  height: 10px;
+  border-radius: 999px;
+  background: #edf2fa;
+  overflow: hidden;
+  border: 1px solid #e8edf3;
+}
+
+.probFill {
+  height: 100%;
+  background: #1e66ff;
+  border-radius: 999px;
+}
+
+/* Explanation card */
+.explainCard {
+  margin-top: 16px;
+  border: 1px dashed #d5dde8;
+  background: #fbfcff;
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.explainHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.infoIcon {
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: #eaf2ff;
+  color: #1e66ff;
+  display: grid;
+  place-items: center;
+  font-weight: 900;
+  font-size: 12px;
+}
+
+.explainTitle {
+  font-weight: 900;
+}
+
+.explainList {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 8px;
+  color: #2f3a4c;
+  font-weight: 800;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.explainNote {
+  margin-top: 10px;
+  font-size: 11px;
+  color: #60708a;
+  font-weight: 700;
+}
+
+/* Segment card */
+.segmentCard {
+  margin-top: 16px;
+  border-radius: 14px;
+  padding: 16px;
+  background:
+    linear-gradient(180deg, rgba(10, 20, 40, 0.40), rgba(10, 20, 40, 0.60)),
+    url("/assets/segment-bg.jpg");
+  background-size: cover;
+  background-position: center;
+  color: #ffffff;
+}
+
+.segmentBadge {
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.8px;
+  opacity: 0.9;
+}
+
+.segmentTitle {
+  margin-top: 6px;
+  font-size: 16px;
+  font-weight: 900;
+}
+
+/* Model compare */
+.compareRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.compareItem {
+  border: 1px solid #e8edf3;
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 12px;
+}
+
+.compareLabel {
+  font-size: 11px;
+  font-weight: 900;
+  color: #60708a;
+  letter-spacing: 0.7px;
+}
+
+.compareValue {
+  margin-top: 6px;
+  font-size: 14px;
+  font-weight: 900;
+  color: #0b1220;
+}
+
+/* Footer line */
+.predFooterLine {
+  margin-top: 18px;
+  padding: 14px 2px;
+  color: #60708a;
+  font-weight: 800;
+  font-size: 12px;
+}
+
+/* Responsive */
+@media (max-width: 1050px) {
+  .predGrid {
+    grid-template-columns: 1fr;
+  }
+}

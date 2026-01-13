@@ -1,0 +1,25 @@
+{
+  "rf_accuracy": 0.9868131868131869,
+  "features": [
+    "event_type",
+    "event_subtype",
+    "severity",
+    "lane_impact_binary",
+    "created_hour",
+    "is_weekend",
+    "is_night",
+    "planned_duration_hours"
+  ],
+  "categorical": [
+    "event_type",
+    "event_subtype",
+    "severity"
+  ],
+  "numeric": [
+    "lane_impact_binary",
+    "created_hour",
+    "is_weekend",
+    "is_night",
+    "planned_duration_hours"
+  ]
+}

@@ -1,0 +1,84 @@
+####################################
+# OS & Editor
+####################################
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+####################################
+# Python / Conda / Virtual Envs
+####################################
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+.eggs/
+.env
+.env.*
+venv/
+.venv/
+traffic_env/
+conda-env/
+.ipynb_checkpoints/
+
+####################################
+# FastAPI / Backend
+####################################
+backend/__pycache__/
+backend/.env
+backend/*.log
+
+####################################
+# Machine Learning / Models
+####################################
+models/*.cbm
+models/*.joblib
+models/*.pkl
+models/*.h5
+models/*.onnx
+
+# Metrics (optional – keep if you want)
+# models/*_metrics.json
+
+####################################
+# Data (VERY IMPORTANT)
+####################################
+data/*.csv
+data/*.json
+data/*.parquet
+data/raw/
+data/processed/
+
+####################################
+# Node / React / Vite
+####################################
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.*
+frontend/.vite/
+
+####################################
+# Build / Cache
+####################################
+build/
+dist/
+.cache/
+coverage/
+
+####################################
+# Logs
+####################################
+*.log
+
+####################################
+# Secrets (extra safety)
+####################################
+*apikey*
+*secret*
+*token*
