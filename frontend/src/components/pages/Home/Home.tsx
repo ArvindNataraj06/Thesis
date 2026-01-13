@@ -77,7 +77,7 @@ export default function Home() {
           <CapabilityCard
             title="Real-time Monitoring"
             description="Dashboard view for incident tracking (live map integration placeholder) with filters for incident attributes."
-            imageUrl="/assets/capability-monitoring.jpg"
+            imageUrl="traffic_model\frontend\src\assets\capability-monitoring.jpg"
           />
           <CapabilityCard
             title="Lane Closure Prediction"

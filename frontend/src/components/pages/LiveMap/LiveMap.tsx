@@ -15,6 +15,8 @@ export default function LiveMap() {
   const [severity, setSeverity] = useState<string>("All Severities");
   const [horizon, setHorizon] = useState<number>(60); // 0..60 minutes
   const [search, setSearch] = useState<string>("");
+  const [events, setEvents] = useState<any[]>([]);
+  
 
   // Demo values (replace with live data later)
   const modelEngine = "CatBoost v2.4";
@@ -35,20 +37,27 @@ export default function LiveMap() {
   };
 
     // ✅ FETCH LIVE EVENTS (RUNS ONCE ON PAGE LOAD)
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const res = await fetch("http://127.0.0.1:8000/live-events");
-        const data = await res.json();
-        console.log("Live events:", data);
-      } catch (err) {
-        console.error("Failed to load live events", err);
-      }
-    };
+useEffect(() => {
+  const load = async () => {
+    try {
+      const res = await fetch("http://127.0.0.1:8000/live-events");
+      const data = await res.json();
 
-    load();
-  }, []);
-  
+      // ✅ Use the correct key from your response
+      setEvents(Array.isArray(data?.events) ? data.events : []);
+
+      console.log("Live events:", data);
+    } catch (err) {
+      console.error("Failed to load live events", err);
+    }
+  };
+
+  load();
+  const id = setInterval(load, 60000); // refresh every 60s
+  return () => clearInterval(id);
+}, []);
+
+
   return (
     <div className="lm">
       {/* Top Header */}
@@ -207,7 +216,7 @@ export default function LiveMap() {
 
           {/* Map placeholder */}
           <div className="lm__map">
-             <MapView />
+             <MapView events={events} />
           </div>
 
           {/* Legend card */}
