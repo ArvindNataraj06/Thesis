@@ -90,8 +90,12 @@ FEATURES = [
 ]
 
 # ---------- Load models ----------
-cat_model = CatBoostClassifier()
-cat_model.load_model(str(CB_PATH))
+# Load CatBoost model only if model file exists. If not present, keep `cat_model` None
+# so the API can still start (useful for local dev without the heavy model files).
+cat_model = None
+if CB_PATH.exists():
+    cat_model = CatBoostClassifier()
+    cat_model.load_model(str(CB_PATH))
 
 rf_model = None
 if RF_PATH.exists():
@@ -156,18 +160,21 @@ def predict(req: PredictRequest):
 
     # --- CatBoost prediction + probabilities ---
     if req.model in ["catboost", "both"]:
-        pred_cb = cat_model.predict(X)[0]
-        if isinstance(pred_cb, (list, tuple)) and len(pred_cb) == 1:
-            pred_cb = pred_cb[0]
+        if cat_model is None:
+            out["catboost"] = {"error": "CatBoost model not found. Place catboost_lane_state_model.cbm in models/"}
+        else:
+            pred_cb = cat_model.predict(X)[0]
+            if isinstance(pred_cb, (list, tuple)) and len(pred_cb) == 1:
+                pred_cb = pred_cb[0]
 
-        proba = cat_model.predict_proba(X)[0]
-        classes = cat_model.classes_.tolist()
-        probs = {str(classes[i]): float(proba[i]) for i in range(len(classes))}
+            proba = cat_model.predict_proba(X)[0]
+            classes = cat_model.classes_.tolist()
+            probs = {str(classes[i]): float(proba[i]) for i in range(len(classes))}
 
-        out["catboost"] = {
-            "predicted_lane_state": str(pred_cb),
-            "probabilities": probs,
-        }
+            out["catboost"] = {
+                "predicted_lane_state": str(pred_cb),
+                "probabilities": probs,
+            }
 
     # --- RandomForest prediction ---
     if req.model in ["rf", "both"]:
