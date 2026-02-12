@@ -1,8 +1,10 @@
-import React, { useMemo, useState, useEffect } from "react";
-import "./LiveMap.css";
+import { useEffect, useMemo, useState } from "react";
+import Container from "../../layout/Container";
 import MapView from "./MapView";
+import "./LiveMap.css";
 
 type IncidentType = "Accidents" | "Construction" | "Heavy Congestion" | "Road Hazards";
+type SeverityFilter = "All" | "Critical" | "Major" | "Minor";
 
 export default function LiveMap() {
   const [types, setTypes] = useState<Record<IncidentType, boolean>>({
@@ -12,255 +14,222 @@ export default function LiveMap() {
     "Road Hazards": false,
   });
 
-  const [severity, setSeverity] = useState<string>("All Severities");
-  const [horizon, setHorizon] = useState<number>(60); // 0..60 minutes
+  const [severity, setSeverity] = useState<SeverityFilter>("All");
+  const [horizon, setHorizon] = useState<number>(60);
   const [search, setSearch] = useState<string>("");
-  const [events, setEvents] = useState<any[]>([]);
-  
 
-  // Demo values (replace with live data later)
-  const modelEngine = "CatBoost v2.4";
-  const accuracy = "98.2%";
-  const activeIncidents = 42;
-  const avgDelay = 8.4;
-  const modelConfidence = "High";
+  const [events, setEvents] = useState<any[]>([]);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   const selectedTypesLabel = useMemo(() => {
     const active = Object.entries(types)
-      .filter(([, v]) => v)
-      .map(([k]) => k);
+      .filter(([, isEnabled]) => isEnabled)
+      .map(([name]) => name);
     return active.length ? active.join(", ") : "None";
   }, [types]);
 
-  const toggleType = (t: IncidentType) => {
-    setTypes((prev) => ({ ...prev, [t]: !prev[t] }));
+  const activeIncidents = events.length || 42;
+  const avgDelay = 8.4;
+  const networkHealth = "Stable";
+
+  const dataFreshnessText = useMemo(() => {
+    if (!lastUpdated) return "Waiting for first refresh";
+    const seconds = Math.max(0, Math.floor((Date.now() - lastUpdated.getTime()) / 1000));
+    return `Data updated ${seconds} seconds ago via Real-time API v4.2`;
+  }, [lastUpdated]);
+
+  const toggleType = (type: IncidentType) => {
+    setTypes((prev) => ({ ...prev, [type]: !prev[type] }));
   };
 
-    // ✅ FETCH LIVE EVENTS (RUNS ONCE ON PAGE LOAD)
-useEffect(() => {
-  const load = async () => {
-    try {
-      const res = await fetch("http://127.0.0.1:8000/live-events");
-      const data = await res.json();
+  const exportCsv = () => {
+    if (!events.length) return;
 
-      // ✅ Use the correct key from your response
-      setEvents(Array.isArray(data?.events) ? data.events : []);
+    const header = ["headline", "event_type", "severity", "updated"];
+    const rows = events.map((event) => {
+      const headline = String(event?.headline || event?.description || "");
+      const eventType = String(event?.event_type || event?.type || "");
+      const eventSeverity = String(event?.severity || "");
+      const updated = String(event?.updated || "");
+      return [headline, eventType, eventSeverity, updated];
+    });
 
-      console.log("Live events:", data);
-    } catch (err) {
-      console.error("Failed to load live events", err);
-    }
+    const csv = [header, ...rows]
+      .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "live_traffic_events.csv";
+    link.click();
+    URL.revokeObjectURL(url);
   };
 
-  load();
-  const id = setInterval(load, 60000); // refresh every 60s
-  return () => clearInterval(id);
-}, []);
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await fetch("http://127.0.0.1:8000/live-events");
+        const data = await res.json();
+        setEvents(Array.isArray(data?.events) ? data.events : []);
+        setLastUpdated(new Date());
+      } catch (err) {
+        console.error("Failed to load live events", err);
+      }
+    };
 
+    load();
+    const id = setInterval(load, 60000);
+    return () => clearInterval(id);
+  }, []);
 
   return (
-    <div className="lm">
-      {/* Top Header */}
-      <header className="lm__topbar">
-        <div className="lm__brand">
-          <div className="lm__brandLogo">▦</div>
-          <div className="lm__brandText">
-            <div className="lm__brandTitle">TrafficAI Dashboard</div>
-            <div className="lm__brandSub">MASTER’S THESIS PROJECT</div>
+    <div className="lmPage">
+      <Container size="wide">
+        {/* Header row — SAME style pattern as Prediction */}
+        <div className="lmHeader">
+          <div>
+            <h1 className="lmTitle">Live Traffic Network</h1>
+            <p className="lmSubtitle">
+              Real-time monitoring and incident visualization across the urban network.
+            </p>
+          </div>
+
+          <div className="lmStatus">
+            <span className="lmDot" />
+            <div className="lmStatusLabel">MODEL STATUS</div>
+            <div className="lmStatusValue">CatBoost</div>
+            <div className="lmStatusDivider" />
+            <div className="lmStatusAcc">98% Accuracy</div>
           </div>
         </div>
 
-        <nav className="lm__tabs">
-          <button className="lm__tab lm__tab--active">Live Map</button>
-          <button className="lm__tab">Historical Data</button>
-          <button className="lm__tab">Analytics</button>
-        </nav>
+        <div className="lmGrid">
+          {/* Left filters card — uses same `.card` concept */}
+          <aside className="card lmFilters">
+            <div className="lmCardHead">
+              <div className="lmCardTitle">Incident Filters</div>
+            </div>
 
-        <div className="lm__topRight">
-          <div className="lm__pill">
-            <div className="lm__pillLabel">MODEL ENGINE</div>
-            <div className="lm__pillValue">{modelEngine}</div>
-          </div>
+            <div className="lmBlock">
+              <div className="lmBlockTitle">INCIDENT TYPE</div>
 
-          <div className="lm__pill lm__pill--blue">
-            <div className="lm__pillLabel">ACCURACY</div>
-            <div className="lm__pillValue">{accuracy}</div>
-          </div>
+              <label className="lmCheck">
+                <input type="checkbox" checked={types.Accidents} onChange={() => toggleType("Accidents")} />
+                <span>Accidents</span>
+              </label>
 
-          <div className="lm__avatar" title="Profile">
-            👤
-          </div>
+              <label className="lmCheck">
+                <input type="checkbox" checked={types.Construction} onChange={() => toggleType("Construction")} />
+                <span>Construction</span>
+              </label>
+
+              <label className="lmCheck">
+                <input
+                  type="checkbox"
+                  checked={types["Heavy Congestion"]}
+                  onChange={() => toggleType("Heavy Congestion")}
+                />
+                <span>Heavy Congestion</span>
+              </label>
+
+              <label className="lmCheck">
+                <input
+                  type="checkbox"
+                  checked={types["Road Hazards"]}
+                  onChange={() => toggleType("Road Hazards")}
+                />
+                <span>Road Hazards</span>
+              </label>
+
+              <div className="lmHint">
+                Selected: <strong>{selectedTypesLabel}</strong>
+              </div>
+            </div>
+
+            <div className="lmBlock">
+              <div className="lmBlockTitle">SEVERITY LEVEL</div>
+
+              <div className="lmSeverityGrid">
+                {(["All", "Critical", "Major", "Minor"] as SeverityFilter[]).map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    className={severity === s ? "lmSegBtn lmSegBtnActive" : "lmSegBtn"}
+                    onClick={() => setSeverity(s)}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="lmBlock">
+              <div className="lmBlockTitle">PREDICTION HORIZON</div>
+
+              <div className="lmHorizonTop">
+                <span>LIVE</span>
+                <span>+{horizon} MIN</span>
+              </div>
+
+              <input
+                className="lmRange"
+                type="range"
+                min={0}
+                max={60}
+                value={horizon}
+                onChange={(e) => setHorizon(Number(e.target.value))}
+              />
+
+              <div className="lmChip">
+                Current view: <span className="lmChipBlue">Real-time</span>
+              </div>
+            </div>
+
+            <button className="lmExportBtn" type="button" onClick={exportCsv}>
+              Export Data (CSV)
+            </button>
+
+            <div className="lmInfo">{dataFreshnessText}</div>
+          </aside>
+
+          {/* Right map card */}
+          <section className="card lmMapCard">
+            <div className="lmSearchRow">
+              <input
+                className="lmSearch"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search intersections..."
+              />
+            </div>
+
+            <div className="lmMapWrap">
+              <MapView events={events} />
+            </div>
+
+            <div className="lmStatsBar">
+              <div className="lmStat">
+                <div className="lmStatLabel">ACTIVE INCIDENTS</div>
+                <div className="lmStatValue">{activeIncidents}</div>
+              </div>
+
+              <div className="lmStat">
+                <div className="lmStatLabel">AVG. DELAY</div>
+                <div className="lmStatValue">
+                  {avgDelay} <span className="lmStatUnit">min</span>
+                </div>
+              </div>
+
+              <div className="lmStat">
+                <div className="lmStatLabel">NETWORK HEALTH</div>
+                <div className="lmStatValue lmStatValueGreen">{networkHealth}</div>
+              </div>
+            </div>
+          </section>
         </div>
-      </header>
-
-      {/* Body */}
-      <div className="lm__body">
-        {/* Left Filters */}
-        <aside className="lm__left">
-          <div className="lm__leftHeader">
-            <span className="lm__leftIcon">≡</span>
-            <span className="lm__leftTitle">INCIDENT FILTERS</span>
-          </div>
-
-          <div className="lm__section">
-            <div className="lm__sectionTitle">INCIDENT TYPE</div>
-
-            <label className="lm__checkRow">
-              <input
-                type="checkbox"
-                checked={types.Accidents}
-                onChange={() => toggleType("Accidents")}
-              />
-              <span>Accidents</span>
-            </label>
-
-            <label className="lm__checkRow">
-              <input
-                type="checkbox"
-                checked={types.Construction}
-                onChange={() => toggleType("Construction")}
-              />
-              <span>Construction</span>
-            </label>
-
-            <label className="lm__checkRow">
-              <input
-                type="checkbox"
-                checked={types["Heavy Congestion"]}
-                onChange={() => toggleType("Heavy Congestion")}
-              />
-              <span>Heavy Congestion</span>
-            </label>
-
-            <label className="lm__checkRow">
-              <input
-                type="checkbox"
-                checked={types["Road Hazards"]}
-                onChange={() => toggleType("Road Hazards")}
-              />
-              <span>Road Hazards</span>
-            </label>
-
-            <div className="lm__hint">
-              Selected: <b>{selectedTypesLabel}</b>
-            </div>
-          </div>
-
-          <div className="lm__section">
-            <div className="lm__sectionTitle">SEVERITY LEVEL</div>
-            <div className="lm__selectWrap">
-              <select
-                className="lm__select"
-                value={severity}
-                onChange={(e) => setSeverity(e.target.value)}
-              >
-                <option>All Severities</option>
-                <option>Low</option>
-                <option>Moderate</option>
-                <option>High</option>
-                <option>Critical</option>
-              </select>
-              <span className="lm__selectArrow">▾</span>
-            </div>
-          </div>
-
-          <div className="lm__section">
-            <div className="lm__sectionTitle">PREDICTION HORIZON</div>
-
-            <div className="lm__horizonRow">
-              <span className="lm__smallLabel">LIVE</span>
-              <span className="lm__smallLabel">+{horizon} MIN</span>
-            </div>
-
-            <input
-              className="lm__range"
-              type="range"
-              min={0}
-              max={60}
-              value={horizon}
-              onChange={(e) => setHorizon(Number(e.target.value))}
-            />
-
-            <div className="lm__pillMini">
-              Currently showing: <b>Live View</b>
-            </div>
-          </div>
-
-          <button className="lm__exportBtn">
-            ⬇ Export Data (CSV)
-          </button>
-
-          <div className="lm__dataNote">
-            Data updated 12 seconds ago via Real-time API
-          </div>
-        </aside>
-
-        {/* Map Area */}
-        <section className="lm__mapWrap">
-          {/* Search bar overlay */}
-          <div className="lm__search">
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="lm__searchInput"
-              placeholder="Search intersections or corridors..."
-            />
-          </div>
-
-          {/* Right map controls */}
-          <div className="lm__mapControls">
-            <button className="lm__ctrlBtn" title="Zoom In">＋</button>
-            <button className="lm__ctrlBtn" title="Zoom Out">－</button>
-            <button className="lm__ctrlBtn" title="Locate">⌖</button>
-          </div>
-
-          {/* Map placeholder */}
-          <div className="lm__map">
-             <MapView events={events} />
-          </div>
-
-          {/* Legend card */}
-          <div className="lm__legend">
-            <div className="lm__legendTitle">TRAFFIC INTENSITY</div>
-            <div className="lm__gradient" />
-            <div className="lm__legendLabels">
-              <span>FLUID</span>
-              <span>CONGESTED</span>
-            </div>
-
-            <div className="lm__legendDots">
-              <div className="lm__dotRow">
-                <span className="lm__dot lm__dot--red" />
-                <span>Critical Incident</span>
-              </div>
-              <div className="lm__dotRow">
-                <span className="lm__dot lm__dot--blue" />
-                <span>Predicted Event</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Bottom stats */}
-          <div className="lm__stats">
-            <div className="lm__statCard">
-              <div className="lm__statLabel">ACTIVE INCIDENTS</div>
-              <div className="lm__statValue">{activeIncidents}</div>
-            </div>
-
-            <div className="lm__statCard">
-              <div className="lm__statLabel">AVG. DELAY</div>
-              <div className="lm__statValue">{avgDelay} <span className="lm__unit">min</span></div>
-            </div>
-
-            <div className="lm__statCard">
-              <div className="lm__statLabel">MODEL CONFIDENCE</div>
-              <div className="lm__statValue lm__statValue--green">
-                {modelConfidence} <span className="lm__check">✔</span>
-              </div>
-            </div>
-          </div>
-        </section>
-      </div>
+      </Container>
     </div>
   );
 }

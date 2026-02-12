@@ -1,28 +1,14 @@
-import React, { useMemo, useState } from "react";
+import { ReactNode, useMemo, useState } from "react";
+import { PredictResponse, TrafficApi } from "../../../api/trafficApi";
+import Container from "../../layout/Container";
 import "./Prediction.css";
-import { TrafficApi, PredictResponse } from "../../../api/trafficApi";
 
 type SeverityUI = "Low" | "Med" | "High" | "Critical";
 
-const EVENT_TYPES = [
-  "ACCIDENT",
-  "CONSTRUCTION",
-  "ROAD_HAZARD",
-  "CONGESTION",
-  "OTHER",
-];
+const EVENT_TYPES = ["ACCIDENT", "CONSTRUCTION", "ROAD_HAZARD", "CONGESTION", "OTHER"];
+const EVENT_SUBTYPES = ["ACCIDENT", "LANE_CLOSURE", "ROAD_WORKS", "BROKEN_VEHICLE", "OTHER"];
 
-const EVENT_SUBTYPES = [
-  "ACCIDENT",
-  "LANE_CLOSURE",
-  "ROAD_WORKS",
-  "BROKEN_VEHICLE",
-  "OTHER",
-];
-
-// Map your UI severity to dataset-like values (adjust if your dataset uses different labels)
 function mapSeverity(ui: SeverityUI): string {
-  // If your dataset has "MINOR/MODERATE/MAJOR", change mapping here.
   if (ui === "Low") return "LOW";
   if (ui === "Med") return "MEDIUM";
   if (ui === "High") return "HIGH";
@@ -33,50 +19,29 @@ function clamp(n: number, min: number, max: number) {
   return Math.max(min, Math.min(max, n));
 }
 
-function formatPercent(x: number) {
-  return `${(x * 100).toFixed(1)}%`;
-}
-
 export default function Prediction() {
-  // ---------- Form State ----------
   const [eventType, setEventType] = useState<string>("");
   const [eventSubtype, setEventSubtype] = useState<string>("");
   const [severityUI, setSeverityUI] = useState<SeverityUI>("Med");
-
-  // In our cleaned dataset we have lane_impact_binary (0/1).
-  // UI shows lane impact "count" (0..3). We'll convert:
-  // 0 => 0, >=1 => 1.
   const [laneImpactCount, setLaneImpactCount] = useState<number>(2);
-
-  // time input "HH:MM"
   const [timeOfDay, setTimeOfDay] = useState<string>("08:30");
   const [isWeekend, setIsWeekend] = useState<boolean>(false);
   const [isNight, setIsNight] = useState<boolean>(false);
-
   const [plannedDurationHours, setPlannedDurationHours] = useState<number>(2);
-
-  // model choice
   const [modelChoice, setModelChoice] = useState<"both" | "catboost" | "rf">("both");
 
-  // ---------- Output State ----------
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
   const [result, setResult] = useState<PredictResponse | null>(null);
 
   const createdHour = useMemo(() => {
-    // timeOfDay "08:30" -> 8
     const h = parseInt(timeOfDay.split(":")[0] || "0", 10);
     return clamp(isNaN(h) ? 0 : h, 0, 23);
   }, [timeOfDay]);
 
   const laneImpactBinary = useMemo(() => (laneImpactCount >= 1 ? 1 : 0), [laneImpactCount]);
+  const canRun = useMemo(() => !!eventType && !!eventSubtype, [eventType, eventSubtype]);
 
-  const canRun = useMemo(() => {
-    return !!eventType && !!eventSubtype;
-  }, [eventType, eventSubtype]);
-
-  // ---------- Derived Display ----------
   const catPred = result?.catboost?.predicted_lane_state || null;
   const rfPred = result?.rf?.predicted_lane_state || null;
   const probs = result?.catboost?.probabilities || {};
@@ -88,6 +53,7 @@ export default function Prediction() {
   }, [catPred, probs]);
 
   const confidencePct = Math.round(topConfidence * 100);
+  const confidenceBucket = Math.floor(clamp(confidencePct, 0, 99) / 10) * 10;
 
   const orderedProbs = useMemo(() => {
     const entries = Object.entries(probs);
@@ -96,25 +62,13 @@ export default function Prediction() {
   }, [probs]);
 
   const explanationBullets = useMemo(() => {
-    // simple deterministic explanation for demo (you can replace with SHAP/LLM later)
-    const bullets: string[] = [];
-
-    bullets.push(
-      `Time of day (${createdHour}:00) influences lane-state probability due to recurring traffic patterns.`
-    );
-
-    bullets.push(
-      `Lane impact indicates whether lanes are affected (binary=${laneImpactBinary}) which strongly impacts closure likelihood.`
-    );
-
-    bullets.push(
-      `Planned duration (${plannedDurationHours}h) can shift the prediction towards longer disruptions.`
-    );
-
-    return bullets;
+    return [
+      `Time (${createdHour}:00) shifts likely lane-state outcomes according to historical traffic patterns.`,
+      `Lane impact binary (${laneImpactBinary}) strongly indicates closure probability.`,
+      `Planned duration (${plannedDurationHours}h) increases risk of longer-lasting restrictions.`,
+    ];
   }, [createdHour, laneImpactBinary, plannedDurationHours]);
 
-  // ---------- Actions ----------
   const reset = () => {
     setEventType("");
     setEventSubtype("");
@@ -139,7 +93,6 @@ export default function Prediction() {
         event_type: eventType,
         event_subtype: eventSubtype,
         severity: mapSeverity(severityUI),
-
         lane_impact_binary: laneImpactBinary,
         created_hour: createdHour,
         is_weekend: isWeekend ? 1 : 0,
@@ -157,48 +110,28 @@ export default function Prediction() {
     }
   };
 
-  // If no prediction yet, show a friendly default card
-  const displayLaneState = catPred || "—";
-  const displayConfidence = result ? confidencePct : 0;
-
   return (
     <div className="predPage">
-      {/* Header row inside page (separate from global navbar if you want) */}
-      <div className="predHeader">
-        <div>
-          <h1 className="predTitle">Traffic Prediction Interface</h1>
-          <p className="predSubtitle">
-            Academic Thesis: Multi-modal Deep Learning for Urban Traffic Incidents
-          </p>
-        </div>
-
-        <div className="predHeaderRight">
+      <Container size="wide">
+        <div className="predHeader">
+          <div>
+            <h1 className="predTitle">Traffic Prediction Interface</h1>
+            <p className="predSubtitle">Predict lane state using structured traffic event attributes.</p>
+          </div>
           <button className="ghostBtn" onClick={reset}>
-            ↻ Reset Form
+            Reset Form
           </button>
         </div>
-      </div>
 
-      {/* Main 2-column grid */}
-      <div className="predGrid">
-        {/* LEFT: Input Parameters */}
-        <section className="card">
-          <div className="cardHead">
-            <div className="cardIcon">⛭</div>
-            <div>
+        <div className="predGrid">
+          <section className="card">
+            <div className="cardHead">
               <div className="cardTitle">Input Parameters</div>
-              <div className="cardHint">Fill incident attributes and run prediction</div>
+              <div className="cardHint">Fill required fields, then run the model.</div>
             </div>
-          </div>
 
-          <div className="formBlock">
-            <label className="label">Event Type</label>
-            <div className="selectWrap">
-              <select
-                className="select"
-                value={eventType}
-                onChange={(e) => setEventType(e.target.value)}
-              >
+            <Field label="Event Type">
+              <select className="input" value={eventType} onChange={(e) => setEventType(e.target.value)}>
                 <option value="">Select incident type</option>
                 {EVENT_TYPES.map((t) => (
                   <option key={t} value={t}>
@@ -206,18 +139,10 @@ export default function Prediction() {
                   </option>
                 ))}
               </select>
-              <span className="selectArrow">▾</span>
-            </div>
-          </div>
+            </Field>
 
-          <div className="formBlock">
-            <label className="label">Event Subtype</label>
-            <div className="selectWrap">
-              <select
-                className="select"
-                value={eventSubtype}
-                onChange={(e) => setEventSubtype(e.target.value)}
-              >
+            <Field label="Event Subtype">
+              <select className="input" value={eventSubtype} onChange={(e) => setEventSubtype(e.target.value)}>
                 <option value="">Select subtype</option>
                 {EVENT_SUBTYPES.map((t) => (
                   <option key={t} value={t}>
@@ -225,238 +150,153 @@ export default function Prediction() {
                   </option>
                 ))}
               </select>
-              <span className="selectArrow">▾</span>
-            </div>
-          </div>
+            </Field>
 
-          <div className="formBlock">
-            <label className="label">Severity Level</label>
-            <div className="segmented">
-              {(["Low", "Med", "High", "Critical"] as SeverityUI[]).map((s) => (
-                <button
-                  key={s}
-                  className={severityUI === s ? "segBtn active" : "segBtn"}
-                  onClick={() => setSeverityUI(s)}
-                  type="button"
-                >
-                  {s}
-                </button>
-              ))}
-            </div>
-          </div>
+            <Field label="Severity">
+              <div className="segmented segmented--four">
+                {(["Low", "Med", "High", "Critical"] as SeverityUI[]).map((s) => (
+                  <button
+                    key={s}
+                    className={severityUI === s ? "segBtn active" : "segBtn"}
+                    onClick={() => setSeverityUI(s)}
+                    type="button"
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </Field>
 
-          <div className="formBlock">
-            <label className="label">Lane Impact (Count)</label>
-            <div className="rangeRow">
+            <Field label="Lane Impact (count)">
+              <div className="rangeRow">
+                <input
+                  className="range"
+                  type="range"
+                  min={0}
+                  max={3}
+                  value={laneImpactCount}
+                  onChange={(e) => setLaneImpactCount(Number(e.target.value))}
+                />
+                <div className="rangeValue">{laneImpactCount}</div>
+              </div>
+            </Field>
+
+            <Field label="Time of Day">
+              <input className="input" type="time" value={timeOfDay} onChange={(e) => setTimeOfDay(e.target.value)} />
+              <div className="toggles">
+                <label className="toggle">
+                  <input type="checkbox" checked={isWeekend} onChange={(e) => setIsWeekend(e.target.checked)} />
+                  <span>Weekend</span>
+                </label>
+                <label className="toggle">
+                  <input type="checkbox" checked={isNight} onChange={(e) => setIsNight(e.target.checked)} />
+                  <span>Night</span>
+                </label>
+              </div>
+            </Field>
+
+            <Field label="Planned Duration (hours)">
               <input
-                className="range"
-                type="range"
+                className="input"
+                type="number"
                 min={0}
-                max={3}
-                value={laneImpactCount}
-                onChange={(e) => setLaneImpactCount(Number(e.target.value))}
+                step={0.5}
+                value={plannedDurationHours}
+                onChange={(e) => setPlannedDurationHours(Number(e.target.value))}
               />
-              <div className="rangeValue">{laneImpactCount}</div>
-            </div>
-            <div className="smallNote">
-              Converted to <b>lane_impact_binary</b>: {laneImpactBinary}
-            </div>
-          </div>
+            </Field>
 
-          <div className="formBlock">
-            <label className="label">Time of Day</label>
-            <div className="timeRow">
-              <input
-                className="timeInput"
-                type="time"
-                value={timeOfDay}
-                onChange={(e) => setTimeOfDay(e.target.value)}
-              />
-              <span className="timeIcon">🕒</span>
-            </div>
-            <div className="toggles">
-              <label className="toggle">
-                <input
-                  type="checkbox"
-                  checked={isWeekend}
-                  onChange={(e) => setIsWeekend(e.target.checked)}
-                />
-                <span>Weekend</span>
-              </label>
-
-              <label className="toggle">
-                <input
-                  type="checkbox"
-                  checked={isNight}
-                  onChange={(e) => setIsNight(e.target.checked)}
-                />
-                <span>Night</span>
-              </label>
-            </div>
-          </div>
-
-          <div className="formBlock">
-            <label className="label">Planned Duration (hours)</label>
-            <input
-              className="textInput"
-              type="number"
-              min={0}
-              step={0.5}
-              value={plannedDurationHours}
-              onChange={(e) => setPlannedDurationHours(Number(e.target.value))}
-            />
-          </div>
-
-          <div className="formBlock">
-            <label className="label">Model</label>
-            <div className="segmented">
-              {(["both", "catboost", "rf"] as const).map((m) => (
-                <button
-                  key={m}
-                  className={modelChoice === m ? "segBtn active" : "segBtn"}
-                  onClick={() => setModelChoice(m)}
-                  type="button"
-                >
-                  {m.toUpperCase()}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <button
-            className="primaryBtn"
-            onClick={runPrediction}
-            disabled={!canRun || loading}
-          >
-            ⚡ {loading ? "Running..." : "Run Prediction Model"}
-          </button>
-
-          {error && <div className="errorBox">⚠ {error}</div>}
-        </section>
-
-        {/* RIGHT: Model Output */}
-        <section className="card">
-          <div className="outputTop">
-            <div>
-              <div className="outputLabel">MODEL OUTPUT</div>
-              <div className="outputTitle">Predicted Lane State</div>
-            </div>
-
-            <div className="ringWrap">
-              <ConfidenceRing value={displayConfidence} />
-              <div className="ringCaption">Confidence Score</div>
-            </div>
-          </div>
-
-          <div className="alertCard">
-            <div className="alertIcon">⚠</div>
-            <div>
-              <div className="alertTitle">
-                {result ? displayLaneState : "Waiting for prediction"}
+            <Field label="Model">
+              <div className="segmented segmented--three">
+                {(["both", "catboost", "rf"] as const).map((m) => (
+                  <button
+                    key={m}
+                    className={modelChoice === m ? "segBtn active" : "segBtn"}
+                    onClick={() => setModelChoice(m)}
+                    type="button"
+                  >
+                    {m.toUpperCase()}
+                  </button>
+                ))}
               </div>
-              <div className="alertSub">
-                {result
-                  ? `Highest probability class with ${confidencePct}% confidence.`
-                  : "Run the model to view lane-state output and probability distribution."}
+            </Field>
+
+            <button className="primaryBtn" onClick={runPrediction} disabled={!canRun || loading}>
+              {loading ? "Running..." : "Run Prediction Model"}
+            </button>
+
+            {error && <div className="errorBox">{error}</div>}
+          </section>
+
+          <section className="card">
+            <div className="outputTop">
+              <div>
+                <div className="outputLabel">MODEL OUTPUT</div>
+                <div className="outputTitle">{catPred || "Waiting for prediction"}</div>
+              </div>
+
+              <div className="confidenceRingWrap">
+                <div className={`confidenceRing confidenceRing--${confidenceBucket}`}>
+                  <span>{result ? `${confidencePct}%` : "0%"}</span>
+                </div>
+                <div className="confidenceLabel">Confidence</div>
               </div>
             </div>
-          </div>
 
-          <div className="probSection">
-            <div className="probTitle">CLASS PROBABILITIES</div>
-
-            {result && orderedProbs.length > 0 ? (
-              orderedProbs.slice(0, 6).map(([label, val]) => (
-                <ProbabilityBar key={label} label={label} value={val} />
-              ))
-            ) : (
-              <div className="emptyProbs">No probabilities yet.</div>
-            )}
-          </div>
-
-          <div className="explainCard">
-            <div className="explainHead">
-              <span className="infoIcon">i</span>
-              <span className="explainTitle">Model Explanation</span>
+            <div className="probSection">
+              <div className="probTitle">Class Probabilities</div>
+              {result && orderedProbs.length > 0 ? (
+                orderedProbs.map(([label, val]) => (
+                  <ProbabilityBar key={label} label={label} value={Math.round(val * 100)} />
+                ))
+              ) : (
+                <div className="emptyProbs">Run prediction to view probabilities.</div>
+              )}
             </div>
 
-            <ul className="explainList">
-              {explanationBullets.map((b, idx) => (
-                <li key={idx}>{b}</li>
-              ))}
-            </ul>
-
-            <div className="explainNote">
-              (This explanation is rule-based for demo. You can replace with SHAP/LLM later.)
+            <div className="compareRow">
+              <div className="compareItem">
+                <div className="compareLabel">CatBoost</div>
+                <div className="compareValue">{catPred ?? "-"}</div>
+              </div>
+              <div className="compareItem">
+                <div className="compareLabel">Random Forest</div>
+                <div className="compareValue">{rfPred ?? "-"}</div>
+              </div>
             </div>
-          </div>
 
-          <div className="segmentCard">
-            <div className="segmentBadge">SELECTED SEGMENT</div>
-            <div className="segmentTitle">I-95 Northbound - Segment 402</div>
-          </div>
-
-          {/* Model comparison quick info */}
-          <div className="compareRow">
-            <div className="compareItem">
-              <div className="compareLabel">CatBoost</div>
-              <div className="compareValue">{catPred ?? "—"}</div>
+            <div className="explainCard">
+              <div className="explainTitle">Model Explanation</div>
+              <ul className="explainList">
+                {explanationBullets.map((b, idx) => (
+                  <li key={idx}>{b}</li>
+                ))}
+              </ul>
             </div>
-            <div className="compareItem">
-              <div className="compareLabel">Random Forest</div>
-              <div className="compareValue">{rfPred ?? "—"}</div>
-            </div>
-          </div>
-        </section>
-      </div>
-
-      {/* Footer hint line like in screenshot */}
-      <div className="predFooterLine">
-        © 2024 Academic Master’s Thesis • Department of Urban Engineering
-      </div>
+          </section>
+        </div>
+      </Container>
     </div>
   );
 }
 
-/* ---------- UI Components ---------- */
+function Field({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="formBlock">
+      <label className="label">{label}</label>
+      {children}
+    </div>
+  );
+}
 
 function ProbabilityBar({ label, value }: { label: string; value: number }) {
-  const pct = Math.round(value * 1000) / 10; // one decimal
   return (
     <div className="probRow">
       <div className="probTop">
-        <span className="probLabel">{label}</span>
-        <span className="probPct">{pct.toFixed(1)}%</span>
+        <span>{label}</span>
+        <span>{value}%</span>
       </div>
-      <div className="probBg">
-        <div className="probFill" style={{ width: `${pct}%` }} />
-      </div>
-    </div>
-  );
-}
-
-function ConfidenceRing({ value }: { value: number }) {
-  // value is 0..100
-  const v = clamp(value, 0, 100);
-  const dash = 2 * Math.PI * 34; // circumference if r=34
-  const offset = dash - (dash * v) / 100;
-
-  return (
-    <div className="ring">
-      <svg width="90" height="90" viewBox="0 0 90 90">
-        <circle className="ringBg" cx="45" cy="45" r="34" />
-        <circle
-          className="ringFg"
-          cx="45"
-          cy="45"
-          r="34"
-          style={{
-            strokeDasharray: `${dash}px`,
-            strokeDashoffset: `${offset}px`,
-          }}
-        />
-      </svg>
-      <div className="ringText">{v}%</div>
+      <progress className="probProgress" value={value} max={100} />
     </div>
   );
 }

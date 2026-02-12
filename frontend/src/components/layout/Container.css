@@ -1,0 +1,8 @@
+.container {
+  margin: 0 auto;
+  width: min(1120px, calc(100% - 2rem));
+}
+
+.container--wide {
+  width: min(1280px, calc(100% - 2rem));
+}

@@ -171,10 +171,10 @@ def predict(req: PredictRequest):
             classes = cat_model.classes_.tolist()
             probs = {str(classes[i]): float(proba[i]) for i in range(len(classes))}
 
-            out["catboost"] = {
-                "predicted_lane_state": str(pred_cb),
-                "probabilities": probs,
-            }
+        out["catboost"] = {
+            "predicted_lane_state": str(pred_cb),
+            "probabilities": probs,
+        }
 
     # --- RandomForest prediction ---
     if req.model in ["rf", "both"]:

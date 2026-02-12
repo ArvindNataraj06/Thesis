@@ -1,458 +1,288 @@
-/* Page */
-.lm {
-  min-height: 100vh;
-  background: #f6f8fb;
-  color: #0b1220;
+/* Same page wrapper concept as Home/Prediction */
+.lmPage {
+  padding-bottom: 1.5rem;
 }
 
-/* Top Bar */
-.lm__topbar {
-  height: 64px;
-  background: #ffffff;
-  border-bottom: 1px solid #e8edf3;
+/* Header row matching Prediction */
+.lmHeader {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  padding: 0 18px;
-  gap: 14px;
+  gap: 1rem;
+  margin-bottom: 0.9rem;
 }
 
-.lm__brand {
-  display: flex;
+.lmTitle {
+  margin: 0;
+  font-size: clamp(1.7rem, 3vw, 2.4rem);
+  line-height: 1.08;
+}
+
+.lmSubtitle {
+  margin: 0.35rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+/* Model status pill (same token usage) */
+.lmStatus {
+  display: inline-flex;
   align-items: center;
-  gap: 12px;
-}
-
-.lm__brandLogo {
-  width: 38px;
-  height: 38px;
-  border-radius: 12px;
-  display: grid;
-  place-items: center;
-  background: #eaf2ff;
-  color: #1e66ff;
-  font-weight: 900;
-}
-
-.lm__brandTitle {
-  font-weight: 900;
-  font-size: 16px;
-  line-height: 1.1;
-}
-
-.lm__brandSub {
-  font-size: 11px;
-  color: #60708a;
-  letter-spacing: 0.6px;
-  font-weight: 700;
-  margin-top: 2px;
-}
-
-/* Tabs */
-.lm__tabs {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.lm__tab {
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  padding: 10px 12px;
-  border-radius: 12px;
-  font-weight: 800;
-  font-size: 13px;
-  color: #4a566b;
-}
-
-.lm__tab:hover {
-  background: #f1f5fb;
-}
-
-.lm__tab--active {
-  color: #1e66ff;
-}
-
-/* Right */
-.lm__topRight {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.lm__pill {
-  background: #ffffff;
-  border: 1px solid #e8edf3;
-  border-radius: 14px;
-  padding: 10px 12px;
-  min-width: 140px;
-}
-
-.lm__pill--blue {
-  background: #1e66ff;
-  border-color: #1e66ff;
-  color: #ffffff;
-}
-
-.lm__pillLabel {
-  font-size: 10px;
-  letter-spacing: 0.7px;
-  font-weight: 900;
-  opacity: 0.75;
-}
-
-.lm__pillValue {
-  font-size: 13px;
-  font-weight: 900;
-  margin-top: 4px;
-}
-
-.lm__avatar {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  background: #f1f5fb;
-  border: 1px solid #e8edf3;
-  display: grid;
-  place-items: center;
-}
-
-/* Body layout */
-.lm__body {
-  display: flex;
-  height: calc(100vh - 64px);
-}
-
-/* Left panel */
-.lm__left {
-  width: 300px;
-  background: #ffffff;
-  border-right: 1px solid #e8edf3;
-  padding: 18px 16px;
-  overflow: auto;
-}
-
-.lm__leftHeader {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 16px;
-}
-
-.lm__leftIcon {
-  color: #60708a;
-  font-weight: 900;
-}
-
-.lm__leftTitle {
-  font-weight: 900;
-  letter-spacing: 0.6px;
-  color: #0b1220;
-}
-
-.lm__section {
-  margin-top: 18px;
-}
-
-.lm__sectionTitle {
-  font-size: 11px;
-  font-weight: 900;
-  color: #60708a;
-  letter-spacing: 0.7px;
-  margin-bottom: 10px;
-}
-
-.lm__checkRow {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 6px 0;
-  font-size: 13px;
-  color: #2f3a4c;
-}
-
-.lm__checkRow input {
-  width: 16px;
-  height: 16px;
-  accent-color: #1e66ff;
-}
-
-.lm__hint {
-  margin-top: 10px;
-  font-size: 12px;
-  color: #60708a;
-}
-
-.lm__selectWrap {
-  position: relative;
-}
-
-.lm__select {
-  width: 100%;
-  padding: 10px 12px;
-  border-radius: 12px;
-  border: 1px solid #e8edf3;
-  background: #ffffff;
-  font-weight: 700;
-  color: #2f3a4c;
-  outline: none;
-}
-
-.lm__selectArrow {
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #60708a;
-}
-
-.lm__horizonRow {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 8px;
-}
-
-.lm__smallLabel {
-  font-size: 11px;
-  font-weight: 900;
-  color: #60708a;
-}
-
-.lm__range {
-  width: 100%;
-  accent-color: #1e66ff;
-}
-
-.lm__pillMini {
-  margin-top: 10px;
-  padding: 10px 12px;
-  border-radius: 12px;
-  border: 1px solid #e8edf3;
-  background: #f6f8fb;
-  font-size: 12px;
-  color: #2f3a4c;
-}
-
-.lm__exportBtn {
-  width: 100%;
-  margin-top: 18px;
-  border: none;
-  border-radius: 12px;
-  padding: 12px 12px;
-  font-weight: 900;
-  cursor: pointer;
-  background: #f1f5fb;
-  color: #2f3a4c;
-}
-
-.lm__exportBtn:hover {
-  background: #eaf2ff;
-  color: #1e66ff;
-}
-
-.lm__dataNote {
-  margin-top: 12px;
-  font-size: 11px;
-  color: #60708a;
-}
-
-/* Map area */
-.lm__mapWrap {
-  position: relative;
-  flex: 1;
-  background: #eef2f8;
-}
-
-.lm__map {
-  height: 100%;
-  width: 100%;
-}
-
-.lm__mapPlaceholder {
-  height: 100%;
-  width: 100%;
-  display: grid;
-  place-items: center;
-  color: #60708a;
+  gap: 0.75rem;
+  border: 1px solid #cfe7d4;
+  background: #f2fbf3;
+  border-radius: var(--radius-md);
+  padding: 0.65rem 0.85rem;
+  box-shadow: var(--shadow-soft);
   font-weight: 800;
 }
 
-/* Search overlay */
-.lm__search {
-  position: absolute;
-  top: 18px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: min(560px, 70%);
-  z-index: 5;
-}
-
-.lm__searchInput {
-  width: 100%;
-  padding: 12px 14px;
-  border-radius: 14px;
-  border: 1px solid #e8edf3;
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(6px);
-  outline: none;
-  font-weight: 700;
-}
-
-/* Map controls */
-.lm__mapControls {
-  position: absolute;
-  top: 90px;
-  right: 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  z-index: 6;
-}
-
-.lm__ctrlBtn {
-  width: 44px;
-  height: 44px;
-  border-radius: 14px;
-  border: 1px solid #e8edf3;
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(6px);
-  cursor: pointer;
-  font-weight: 900;
-  font-size: 18px;
-}
-
-.lm__ctrlBtn:hover {
-  background: #ffffff;
-}
-
-/* Legend */
-.lm__legend {
-  position: absolute;
-  left: 18px;
-  bottom: 98px;
-  width: 220px;
-  background: rgba(255, 255, 255, 0.96);
-  border: 1px solid #e8edf3;
-  border-radius: 14px;
-  padding: 14px;
-  z-index: 6;
-  box-shadow: 0 12px 30px rgba(10, 20, 40, 0.10);
-}
-
-.lm__legendTitle {
-  font-size: 11px;
-  font-weight: 900;
-  color: #60708a;
-  letter-spacing: 0.7px;
-  margin-bottom: 10px;
-}
-
-.lm__gradient {
-  height: 6px;
-  border-radius: 99px;
-  background: linear-gradient(90deg, #20c997, #f1c40f, #ff4d4f);
-}
-
-.lm__legendLabels {
-  display: flex;
-  justify-content: space-between;
-  font-size: 11px;
-  font-weight: 900;
-  color: #60708a;
-  margin-top: 8px;
-}
-
-.lm__legendDots {
-  margin-top: 12px;
-  display: grid;
-  gap: 10px;
-}
-
-.lm__dotRow {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 12px;
-  color: #2f3a4c;
-  font-weight: 700;
-}
-
-.lm__dot {
+.lmDot {
   width: 10px;
   height: 10px;
-  border-radius: 999px;
+  border-radius: 50%;
+  background: #20b15a;
+  box-shadow: 0 0 0 4px rgba(32, 177, 90, 0.14);
 }
 
-.lm__dot--red {
-  background: #ff4d4f;
+.lmStatusLabel {
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  font-weight: 900;
+  color: #2b7a3f;
 }
 
-.lm__dot--blue {
-  background: #1e66ff;
+.lmStatusValue {
+  font-weight: 900;
+  color: var(--text-primary);
 }
 
-/* Bottom stats */
-.lm__stats {
-  position: absolute;
-  bottom: 18px;
-  right: 18px;
+.lmStatusDivider {
+  width: 1px;
+  height: 22px;
+  background: #cfe7d4;
+}
+
+.lmStatusAcc {
+  font-weight: 900;
+  color: var(--text-primary);
+}
+
+/* Grid same style as Prediction */
+.lmGrid {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: 0.9rem;
+  align-items: start;
+}
+
+/* Filters card uses .card from Prediction, just add specifics */
+.lmFilters {
+  padding: 1rem;
+}
+
+.lmCardHead {
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 0.8rem;
+}
+
+.lmCardTitle {
+  font-weight: 800;
+  font-size: 1.08rem;
+}
+
+.lmBlock {
+  margin-top: 0.9rem;
+}
+
+.lmBlockTitle {
+  margin-bottom: 0.6rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  font-weight: 800;
+}
+
+.lmCheck {
   display: flex;
-  gap: 12px;
-  z-index: 6;
+  align-items: center;
+  gap: 0.65rem;
+  min-height: 34px;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-size: 0.86rem;
 }
 
-.lm__statCard {
-  background: rgba(255, 255, 255, 0.96);
-  border: 1px solid #e8edf3;
-  border-radius: 14px;
-  padding: 12px 14px;
-  min-width: 160px;
-  box-shadow: 0 12px 30px rgba(10, 20, 40, 0.10);
+.lmCheck input {
+  accent-color: var(--brand);
 }
 
-.lm__statLabel {
-  font-size: 10px;
+.lmHint {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+/* severity 2x2 buttons similar to your segmented */
+.lmSeverityGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.45rem;
+}
+
+.lmSegBtn {
+  border: 1px solid var(--line);
+  background: var(--bg-surface);
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  padding: 0.6rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.lmSegBtn:hover {
+  background: var(--bg-muted);
+}
+
+.lmSegBtnActive {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+.lmHorizonTop {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  font-weight: 800;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.lmRange {
+  width: 100%;
+  accent-color: var(--brand);
+}
+
+.lmChip {
+  margin-top: 0.7rem;
+  background: var(--bg-muted);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 0.65rem;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.lmChipBlue {
+  color: var(--brand);
   font-weight: 900;
-  color: #60708a;
-  letter-spacing: 0.7px;
 }
 
-.lm__statValue {
-  margin-top: 6px;
-  font-size: 20px;
+.lmExportBtn {
+  margin-top: 0.9rem;
+  width: 100%;
+  border: 1px solid var(--line);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border-radius: var(--radius-sm);
+  padding: 0.7rem 0.85rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.lmExportBtn:hover {
+  background: var(--bg-muted);
+}
+
+.lmInfo {
+  margin-top: 0.65rem;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+/* Map card */
+.lmMapCard {
+  padding: 1rem;
+  position: relative;
+}
+
+.lmSearchRow {
+  margin-bottom: 0.75rem;
+}
+
+.lmSearch {
+  width: 100%;
+  border: 1px solid var(--line);
+  background: var(--bg-surface);
+  border-radius: var(--radius-sm);
+  padding: 0.62rem 0.7rem;
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.lmSearch:focus {
+  outline: 2px solid transparent;
+  border-color: var(--brand);
+}
+
+.lmMapWrap {
+  height: 520px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: var(--bg-muted);
+}
+
+/* Bottom stats bar inside map card */
+.lmStatsBar {
+  margin-top: 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  padding: 0.75rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.lmStatLabel {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 800;
+}
+
+.lmStatValue {
+  margin-top: 0.25rem;
+  font-size: 1.15rem;
   font-weight: 900;
-  color: #0b1220;
+  color: var(--text-primary);
 }
 
-.lm__unit {
-  font-size: 12px;
-  color: #60708a;
-  font-weight: 900;
+.lmStatUnit {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--text-muted);
 }
 
-.lm__statValue--green {
-  color: #16a34a;
+.lmStatValueGreen {
+  color: #1fa05f;
 }
 
-.lm__check {
-  font-size: 14px;
-}
-
-/* Responsive */
-@media (max-width: 980px) {
-  .lm__left {
-    display: none;
+/* Responsive like Prediction */
+@media (max-width: 1080px) {
+  .lmGrid {
+    grid-template-columns: 1fr;
   }
-  .lm__stats {
-    left: 18px;
-    right: 18px;
-    justify-content: space-between;
-    flex-wrap: wrap;
+  .lmMapWrap {
+    height: 520px;
   }
-  .lm__map {
-  height: 100%;
-  min-height: 650px;
-}
-
 }
