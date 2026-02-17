@@ -1,5 +1,5 @@
 {
-  "catboost_accuracy": 0.9868131868131869,
+  "catboost_accuracy": 0.9857142857142858,
   "features": [
     "event_type",
     "event_subtype",
