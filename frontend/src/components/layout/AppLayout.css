@@ -1,0 +1,10 @@
+.appLayout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.appLayout__main {
+  flex: 1;
+  padding: 1.5rem 0 2rem;
+}

@@ -4,3 +4,6 @@ pydantic
 pandas
 numpy
 catboost
+requests
+python-dotenv
+openai

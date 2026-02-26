@@ -1,0 +1,26 @@
+{
+  "rf_tuning": {
+    "best_params": {
+      "rf__n_estimators": 500,
+      "rf__min_samples_split": 2,
+      "rf__min_samples_leaf": 1,
+      "rf__max_features": 0.5,
+      "rf__max_depth": null
+    },
+    "best_cv_macro_f1": 0.9849264807587594
+  },
+  "catboost_tuning": {
+    "best": {
+      "params": {
+        "depth": 4,
+        "learning_rate": 0.1,
+        "l2_leaf_reg": 6,
+        "iterations": 600
+      },
+      "acc_mean": 0.9865934065934067,
+      "acc_std": 0.003041396154527059,
+      "macro_f1_mean": 0.984186753525967,
+      "macro_f1_std": 0.0040327871147280234
+    }
+  }
+}

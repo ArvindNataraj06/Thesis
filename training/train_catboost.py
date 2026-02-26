@@ -45,15 +45,27 @@ def main():
 
     cat_idx = [X_train.columns.get_loc(c) for c in CATEGORICAL]
 
+    # model = CatBoostClassifier(
+    #     iterations=1200,
+    #     learning_rate=0.08,
+    #     depth=8,
+    #     loss_function="MultiClass",
+    #     eval_metric="Accuracy",
+    #     random_seed=42,
+    #     verbose=100
+    # )
     model = CatBoostClassifier(
-        iterations=1200,
-        learning_rate=0.08,
-        depth=8,
-        loss_function="MultiClass",
-        eval_metric="Accuracy",
-        random_seed=42,
-        verbose=100
-    )
+    iterations=600,
+    learning_rate=0.1,
+    depth=4,
+    l2_leaf_reg=6,
+    loss_function="MultiClass",
+    eval_metric="Accuracy",
+    random_seed=42,
+    verbose=100
+)
+
+
 
     model.fit(X_train, y_train, cat_features=cat_idx)
 

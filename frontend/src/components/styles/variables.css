@@ -1,0 +1,24 @@
+:root {
+  --font-sans: "Manrope", "Segoe UI", Tahoma, sans-serif;
+
+  --bg-page: #f2f5fa;
+  --bg-surface: #ffffff;
+  --bg-muted: #eef3fb;
+  --bg-strong: #0f1b33;
+
+  --text-primary: #111a2d;
+  --text-muted: #52617d;
+  --text-inverse: #f7faff;
+
+  --brand: #1f6dff;
+  --brand-hover: #1253d1;
+  --brand-soft: #eaf1ff;
+  --line: #dbe4f2;
+  --danger-soft: #ffecef;
+  --danger: #b3253f;
+
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --shadow-soft: 0 10px 30px rgba(12, 26, 57, 0.08);
+}

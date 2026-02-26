@@ -36,6 +36,33 @@ export type PredictResponse = {
   };
 };
 
+export type LlmExplanation = {
+  explanation_paragraph?: string;
+  commuter_summary?: string;
+  operator_note?: string;
+  suggested_action?: string;
+  risk_level?: string; // "low" | "medium" | "high" | "UNKNOWN"
+  _latency_ms?: number;
+};
+
+export type PredictResponse = {
+  features_used: Record<string, any>;
+  accuracies: { catboost?: number; rf?: number };
+
+  catboost?: {
+    predicted_lane_state?: string;
+    probabilities?: Record<string, number>;
+  };
+
+  rf?: {
+    predicted_lane_state?: string;
+    probabilities?: Record<string, number>;
+  };
+
+  llm_explanation?: LlmExplanation;
+  llm_latency_ms?: number;
+};
+
 export type HealthResponse = {
   status: string;
 };
