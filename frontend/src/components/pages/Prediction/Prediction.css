@@ -405,3 +405,71 @@
     grid-template-columns: 1fr;
   }
 }
+.explainHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.riskBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.riskLatency {
+  font-weight: 800;
+  color: var(--text-muted);
+  text-transform: none;
+}
+
+.riskBadge--low {
+  background: #ecfff3;
+  border-color: #baf3cf;
+  color: #137a3a;
+}
+
+.riskBadge--medium {
+  background: #fff8e6;
+  border-color: #ffe0a8;
+  color: #8a5a00;
+}
+
+.riskBadge--high {
+  background: #ffecef;
+  border-color: #ffc3cd;
+  color: #b00020;
+}
+
+.riskBadge--unknown {
+  background: #f2f4f7;
+  border-color: #d0d5dd;
+  color: #344054;
+}
+
+.llmParagraph {
+  margin: 0.65rem 0 0;
+  color: var(--text-primary);
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.llmEmpty {
+  margin-top: 0.65rem;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.explainDivider {
+  height: 1px;
+  background: var(--line);
+  margin: 0.85rem 0;
+}

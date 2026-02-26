@@ -1,33 +1,45 @@
-import { ReactNode, useMemo, useState } from "react";
+import { ReactNode, useMemo, useState, useEffect } from "react";
 import { PredictResponse, TrafficApi } from "../../../api/trafficApi";
 import Container from "../../layout/Container";
 import "./Prediction.css";
 
-type SeverityUI = "Low" | "Med" | "High" | "Critical";
+/**
+ * IMPORTANT:
+ * Your model was trained on dataset labels like:
+ * event_type: "INCIDENT" | "CONSTRUCTION"
+ * event_subtype: "Traffic Collision", "Roadwork", "Long-term construction", ...
+ * severity: "Unknown" | "Minor" | "Moderate" | "Major" | "Severe"
+ *
+ * So UI options must match these exact strings.
+ */
 
-const EVENT_TYPES = ["ACCIDENT", "CONSTRUCTION", "ROAD_HAZARD", "CONGESTION", "OTHER"];
-const EVENT_SUBTYPES = ["ACCIDENT", "LANE_CLOSURE", "ROAD_WORKS", "BROKEN_VEHICLE", "OTHER"];
+type EventType = "" | "INCIDENT" | "CONSTRUCTION";
+type SeverityLabel = "Unknown" | "Minor" | "Moderate" | "Major" | "Severe";
 
-function mapSeverity(ui: SeverityUI): string {
-  if (ui === "Low") return "LOW";
-  if (ui === "Med") return "MEDIUM";
-  if (ui === "High") return "HIGH";
-  return "CRITICAL";
-}
+const EVENT_TYPES: EventType[] = ["INCIDENT", "CONSTRUCTION"];
+
+const SUBTYPES_BY_TYPE: Record<Exclude<EventType, "">, string[]> = {
+  CONSTRUCTION: ["Roadwork", "Long-term construction", "Emergency construction", "Bridge work"],
+  INCIDENT: ["Traffic Collision", "Traffic Collision with Injuries", "Disabled vehicle", "Traffic Hazard"],
+};
 
 function clamp(n: number, min: number, max: number) {
   return Math.max(min, Math.min(max, n));
 }
 
 export default function Prediction() {
-  const [eventType, setEventType] = useState<string>("");
+  const [eventType, setEventType] = useState<EventType>("");
   const [eventSubtype, setEventSubtype] = useState<string>("");
-  const [severityUI, setSeverityUI] = useState<SeverityUI>("Med");
+
+  // Use dataset severity labels directly (no mapping needed)
+  const [severity, setSeverity] = useState<SeverityLabel>("Moderate");
+
   const [laneImpactCount, setLaneImpactCount] = useState<number>(2);
   const [timeOfDay, setTimeOfDay] = useState<string>("08:30");
   const [isWeekend, setIsWeekend] = useState<boolean>(false);
   const [isNight, setIsNight] = useState<boolean>(false);
   const [plannedDurationHours, setPlannedDurationHours] = useState<number>(2);
+
   const [modelChoice, setModelChoice] = useState<"both" | "catboost" | "rf">("both");
 
   const [loading, setLoading] = useState(false);
@@ -40,15 +52,50 @@ export default function Prediction() {
   }, [timeOfDay]);
 
   const laneImpactBinary = useMemo(() => (laneImpactCount >= 1 ? 1 : 0), [laneImpactCount]);
+
+  const subtypeOptions = useMemo(() => {
+    if (!eventType) return [];
+    return SUBTYPES_BY_TYPE[eventType] || [];
+  }, [eventType]);
+
+  // When event type changes, reset subtype (prevents invalid unseen categories)
+  useEffect(() => {
+    setEventSubtype("");
+  }, [eventType]);
+
+  // Optional: helpful defaults for duration when choosing subtype (UX stays same)
+  useEffect(() => {
+    // Only suggest if user hasn't modified too much
+    if (!eventSubtype) return;
+
+    if (eventSubtype === "Long-term construction") {
+      // long-term construction in dataset often has very large durations (hundreds/thousands)
+      setPlannedDurationHours((prev) => (prev < 48 ? 500 : prev));
+    } else if (eventSubtype === "Emergency construction") {
+      setPlannedDurationHours((prev) => (prev > 72 ? 12 : prev));
+    } else if (eventSubtype === "Roadwork") {
+      setPlannedDurationHours((prev) => (prev > 200 ? 24 : prev));
+    } else if (eventSubtype === "Bridge work") {
+      setPlannedDurationHours((prev) => (prev > 200 ? 72 : prev));
+    }
+  }, [eventSubtype]);
+
   const canRun = useMemo(() => !!eventType && !!eventSubtype, [eventType, eventSubtype]);
 
   const catPred = result?.catboost?.predicted_lane_state || null;
   const rfPred = result?.rf?.predicted_lane_state || null;
   const probs = result?.catboost?.probabilities || {};
 
+  // LLM display
+  const llm = result?.llm_explanation ?? (result as any)?.llm;
+  const risk = (llm?.risk_level || "").toUpperCase();
+  const explanation = llm?.explanation_paragraph || "";
+  const llmLatency = result?.llm_latency_ms ?? llm?._latency_ms ?? null;
+  const riskLabel = risk === "LOW" || risk === "MEDIUM" || risk === "HIGH" ? risk : "UNKNOWN";
+
   const topConfidence = useMemo(() => {
     if (!catPred) return 0;
-    const p = probs[catPred];
+    const p = (probs as any)[catPred];
     return typeof p === "number" ? p : 0;
   }, [catPred, probs]);
 
@@ -56,7 +103,7 @@ export default function Prediction() {
   const confidenceBucket = Math.floor(clamp(confidencePct, 0, 99) / 10) * 10;
 
   const orderedProbs = useMemo(() => {
-    const entries = Object.entries(probs);
+    const entries = Object.entries(probs as Record<string, number>);
     entries.sort((a, b) => b[1] - a[1]);
     return entries;
   }, [probs]);
@@ -72,7 +119,7 @@ export default function Prediction() {
   const reset = () => {
     setEventType("");
     setEventSubtype("");
-    setSeverityUI("Med");
+    setSeverity("Moderate");
     setLaneImpactCount(2);
     setTimeOfDay("08:30");
     setIsWeekend(false);
@@ -92,7 +139,7 @@ export default function Prediction() {
         model: modelChoice,
         event_type: eventType,
         event_subtype: eventSubtype,
-        severity: mapSeverity(severityUI),
+        severity: severity, // send dataset label as-is
         lane_impact_binary: laneImpactBinary,
         created_hour: createdHour,
         is_weekend: isWeekend ? 1 : 0,
@@ -102,6 +149,7 @@ export default function Prediction() {
 
       const data = await TrafficApi.predict(payload);
       setResult(data);
+      console.log("PREDICT RESPONSE:", data);
     } catch (e: any) {
       setError(e?.message || "Prediction failed. Check backend / CORS / payload.");
       setResult(null);
@@ -131,7 +179,11 @@ export default function Prediction() {
             </div>
 
             <Field label="Event Type">
-              <select className="input" value={eventType} onChange={(e) => setEventType(e.target.value)}>
+              <select
+                className="input"
+                value={eventType}
+                onChange={(e) => setEventType(e.target.value as EventType)}
+              >
                 <option value="">Select incident type</option>
                 {EVENT_TYPES.map((t) => (
                   <option key={t} value={t}>
@@ -142,9 +194,14 @@ export default function Prediction() {
             </Field>
 
             <Field label="Event Subtype">
-              <select className="input" value={eventSubtype} onChange={(e) => setEventSubtype(e.target.value)}>
-                <option value="">Select subtype</option>
-                {EVENT_SUBTYPES.map((t) => (
+              <select
+                className="input"
+                value={eventSubtype}
+                onChange={(e) => setEventSubtype(e.target.value)}
+                disabled={!eventType}
+              >
+                <option value="">{eventType ? "Select subtype" : "Select Event Type first"}</option>
+                {subtypeOptions.map((t) => (
                   <option key={t} value={t}>
                     {t}
                   </option>
@@ -153,18 +210,22 @@ export default function Prediction() {
             </Field>
 
             <Field label="Severity">
+              {/* Keep the same segmented UI style, just use dataset labels */}
               <div className="segmented segmented--four">
-                {(["Low", "Med", "High", "Critical"] as SeverityUI[]).map((s) => (
+                {(["Unknown", "Minor", "Moderate", "Severe"] as const).map((s) => (
                   <button
                     key={s}
-                    className={severityUI === s ? "segBtn active" : "segBtn"}
-                    onClick={() => setSeverityUI(s)}
+                    className={severity === s ? "segBtn active" : "segBtn"}
+                    onClick={() => setSeverity(s)}
                     type="button"
                   >
                     {s}
                   </button>
                 ))}
               </div>
+              {/* Major is kept but not shown in the 4-button layout to preserve UX.
+                  If you want Major visible without changing layout, we can swap "Severe" to "Major" and keep a tooltip.
+               */}
             </Field>
 
             <Field label="Lane Impact (count)">
@@ -266,7 +327,30 @@ export default function Prediction() {
             </div>
 
             <div className="explainCard">
-              <div className="explainTitle">Model Explanation</div>
+              <div className="explainHead">
+                <div className="explainTitle">LLM Guidance</div>
+
+                {result ? (
+                  <div className={`riskBadge riskBadge--${riskLabel.toLowerCase()}`}>
+                    Risk: {riskLabel}
+                    {typeof llmLatency === "number" ? <span className="riskLatency">• {llmLatency} ms</span> : null}
+                  </div>
+                ) : null}
+              </div>
+
+              {result ? (
+                explanation ? (
+                  <p className="llmParagraph">{explanation}</p>
+                ) : (
+                  <div className="llmEmpty">No LLM explanation returned.</div>
+                )
+              ) : (
+                <div className="llmEmpty">Run prediction to see LLM guidance.</div>
+              )}
+
+              <div className="explainDivider" />
+
+              <div className="explainTitle">Why the ML model predicted this</div>
               <ul className="explainList">
                 {explanationBullets.map((b, idx) => (
                   <li key={idx}>{b}</li>

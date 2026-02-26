@@ -12,6 +12,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from llm import generate_explanation, MODEL_NAME, PROMPT_VERSION
+from llm_client import call_finetuned_endpoint
 from logging_utils import log_llm_call
 from eval import evaluate_llm_logs
 from catboost import CatBoostClassifier
@@ -234,15 +235,27 @@ def predict(req: PredictRequest):
     # ------------------------
     if final_prediction:
         t0 = time.time()
-        llm_result = generate_explanation(row, final_prediction)  # returns dict (safe)
+        # Step 4 — Call finetuned endpoint directly or via generate_explanation
+        llm_result = call_finetuned_endpoint(row, final_prediction)
         latency_ms = int((time.time() - t0) * 1000)
 
-        out["llm_explanation"] = llm_result
+        # out["llm_explanation"] = llm_result
+        # Ensure llm_explanation is only the clean output
+        out["llm_explanation"] = {
+            "explanation_paragraph": llm_result.get("explanation_paragraph", ""),
+            "risk_level": llm_result.get("risk_level", "UNKNOWN"),
+            "_latency_ms": llm_result.get("_latency_ms", latency_ms),
+        }
         out["llm_latency_ms"] = latency_ms
+
+        # Add requested fields for Step 4
+        out["prediction"] = final_prediction
+        out["llm"] = llm_result
+        out["event_data"] = row
 
         log_llm_call({
             "endpoint": "/predict",
-            "model_name": MODEL_NAME,
+            "model_name": "Finetuned-Endpoint",
             "prompt_version": PROMPT_VERSION,
             "event_data": row,
             "final_prediction": final_prediction,
