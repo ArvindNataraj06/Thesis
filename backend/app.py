@@ -9,6 +9,8 @@ import joblib
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
+from datetime import datetime
+from uuid import uuid4
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from llm import generate_explanation, MODEL_NAME, PROMPT_VERSION
@@ -48,6 +50,9 @@ RF_PATH = MODELS_DIR / "random_forest_lane_state.joblib"
 
 CB_METRICS_PATH = MODELS_DIR / "catboost_metrics.json"
 RF_METRICS_PATH = MODELS_DIR / "rf_metrics.json"
+BACKEND_DIR = Path(__file__).resolve().parent
+LOGS_DIR = BACKEND_DIR / "logs"
+HISTORY_PATH = LOGS_DIR / "prediction_history.json"
 
 FEATURES = [
     "event_type",
@@ -70,6 +75,41 @@ def to_scalar_str(x) -> str:
     except Exception:
         pass
     return str(x)
+
+def ensure_history_file():
+    LOGS_DIR.mkdir(parents=True, exist_ok=True)
+    if not HISTORY_PATH.exists():
+        HISTORY_PATH.write_text("[]", encoding="utf-8")
+
+
+def read_history():
+    ensure_history_file()
+    try:
+        return json.loads(HISTORY_PATH.read_text(encoding="utf-8"))
+    except Exception:
+        return []
+
+
+def append_history(record: dict):
+    history = read_history()
+    history.append(record)
+    HISTORY_PATH.write_text(json.dumps(history, indent=2), encoding="utf-8")
+
+
+def clear_history():
+    ensure_history_file()
+    HISTORY_PATH.write_text("[]", encoding="utf-8")
+
+
+def delete_history_item(item_id: str):
+    history = read_history()
+    new_history = [item for item in history if item.get("id") != item_id]
+
+    if len(new_history) == len(history):
+        return False
+
+    HISTORY_PATH.write_text(json.dumps(new_history, indent=2), encoding="utf-8")
+    return True
 
 # Load models (safe startup even if files missing)
 cat_model = None
@@ -152,6 +192,27 @@ def llm_eval():
     Reads logs/llm_calls.jsonl and returns reliability + latency metrics.
     """
     return evaluate_llm_logs()
+
+@app.get("/history")
+def get_history():
+    return {
+        "count": len(read_history()),
+        "items": read_history()
+    }
+
+
+@app.delete("/history")
+def delete_history():
+    clear_history()
+    return {"message": "Prediction history cleared successfully"}
+
+@app.delete("/history/{item_id}")
+def delete_history_by_id(item_id: str):
+    deleted = delete_history_item(item_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="History item not found")
+
+    return {"message": f"History item {item_id} deleted successfully"}
 
 
 @app.post("/predict")
@@ -263,4 +324,19 @@ def predict(req: PredictRequest):
             "latency_ms": latency_ms,
         })
 
+    history_record = {
+    "id": str(uuid4()),
+    "timestamp": datetime.utcnow().isoformat() + "Z",
+    "selected_model": req.model,
+    "features_used": row,
+    "prediction": out.get("prediction"),
+    "catboost": out.get("catboost"),
+    "rf": out.get("rf"),
+    "llm_explanation": out.get("llm_explanation"),
+    "llm_latency_ms": out.get("llm_latency_ms"),
+}
+
+    append_history(history_record)
+
     return out
+

@@ -1,4 +1,4 @@
-import { ReactNode, useMemo, useState, useEffect } from "react";
+import { ReactNode, useMemo, useState, useEffect, useCallback } from "react";
 import { PredictResponse, TrafficApi } from "../../../api/trafficApi";
 import Container from "../../layout/Container";
 import "./Prediction.css";
@@ -15,6 +15,37 @@ import "./Prediction.css";
 
 type EventType = "" | "INCIDENT" | "CONSTRUCTION";
 type SeverityLabel = "Unknown" | "Minor" | "Moderate" | "Major" | "Severe";
+
+type PredictionHistoryItem = {
+  id?: string;
+  timestamp: string;
+  selected_model: string;
+  features_used: {
+    event_type: string;
+    event_subtype: string;
+    severity: string;
+    lane_impact_binary: number;
+    created_hour: number;
+    is_weekend: number;
+    is_night: number;
+    planned_duration_hours: number;
+  };
+  prediction?: string;
+  catboost?: {
+    predicted_lane_state?: string;
+    probabilities?: Record<string, number>;
+  };
+  rf?: {
+    predicted_lane_state?: string;
+    probabilities?: Record<string, number>;
+  };
+  llm_explanation?: {
+    explanation_paragraph?: string;
+    risk_level?: string;
+    _latency_ms?: number;
+  };
+  llm_latency_ms?: number;
+};
 
 const EVENT_TYPES: EventType[] = ["INCIDENT", "CONSTRUCTION"];
 
@@ -46,6 +77,10 @@ export default function Prediction() {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<PredictResponse | null>(null);
 
+  const [history, setHistory] = useState<PredictionHistoryItem[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyError, setHistoryError] = useState<string | null>(null);
+
   const createdHour = useMemo(() => {
     const h = parseInt(timeOfDay.split(":")[0] || "0", 10);
     return clamp(isNaN(h) ? 0 : h, 0, 23);
@@ -65,11 +100,9 @@ export default function Prediction() {
 
   // Optional: helpful defaults for duration when choosing subtype (UX stays same)
   useEffect(() => {
-    // Only suggest if user hasn't modified too much
     if (!eventSubtype) return;
 
     if (eventSubtype === "Long-term construction") {
-      // long-term construction in dataset often has very large durations (hundreds/thousands)
       setPlannedDurationHours((prev) => (prev < 48 ? 500 : prev));
     } else if (eventSubtype === "Emergency construction") {
       setPlannedDurationHours((prev) => (prev > 72 ? 12 : prev));
@@ -116,6 +149,50 @@ export default function Prediction() {
     ];
   }, [createdHour, laneImpactBinary, plannedDurationHours]);
 
+  const loadHistory = useCallback(async () => {
+    setHistoryLoading(true);
+    setHistoryError(null);
+
+    try {
+      const res = await fetch("http://127.0.0.1:8000/history");
+      if (!res.ok) {
+        throw new Error("Failed to load prediction history");
+      }
+
+      const data = await res.json();
+      setHistory(Array.isArray(data.items) ? data.items : []);
+    } catch (e: any) {
+      setHistoryError(e?.message || "Could not load prediction history.");
+    } finally {
+      setHistoryLoading(false);
+    }
+  }, []);
+
+  const deleteHistoryItem = async (id?: string) => {
+  if (!id) {
+    alert("This history item was created before IDs were added, so it cannot be deleted individually.");
+    return;
+  }
+
+  try {
+    const res = await fetch(`http://127.0.0.1:8000/history/${id}`, {
+      method: "DELETE",
+    });
+
+    if (!res.ok) {
+      throw new Error("Failed to delete history item");
+    }
+
+    await loadHistory();
+  } catch (e: any) {
+    alert(e?.message || "Could not delete history item.");
+  }
+};
+
+  useEffect(() => {
+    loadHistory();
+  }, [loadHistory]);
+
   const reset = () => {
     setEventType("");
     setEventSubtype("");
@@ -139,7 +216,7 @@ export default function Prediction() {
         model: modelChoice,
         event_type: eventType,
         event_subtype: eventSubtype,
-        severity: severity, // send dataset label as-is
+        severity: severity,
         lane_impact_binary: laneImpactBinary,
         created_hour: createdHour,
         is_weekend: isWeekend ? 1 : 0,
@@ -149,6 +226,7 @@ export default function Prediction() {
 
       const data = await TrafficApi.predict(payload);
       setResult(data);
+      await loadHistory();
       console.log("PREDICT RESPONSE:", data);
     } catch (e: any) {
       setError(e?.message || "Prediction failed. Check backend / CORS / payload.");
@@ -210,7 +288,6 @@ export default function Prediction() {
             </Field>
 
             <Field label="Severity">
-              {/* Keep the same segmented UI style, just use dataset labels */}
               <div className="segmented segmented--four">
                 {(["Unknown", "Minor", "Moderate", "Severe"] as const).map((s) => (
                   <button
@@ -223,9 +300,6 @@ export default function Prediction() {
                   </button>
                 ))}
               </div>
-              {/* Major is kept but not shown in the 4-button layout to preserve UX.
-                  If you want Major visible without changing layout, we can swap "Severe" to "Major" and keep a tooltip.
-               */}
             </Field>
 
             <Field label="Lane Impact (count)">
@@ -359,6 +433,99 @@ export default function Prediction() {
             </div>
           </section>
         </div>
+
+        <section className="card" style={{ marginTop: "24px" }}>
+          <div className="cardHead">
+            <div className="cardTitle">Prediction History</div>
+
+          </div>
+
+          {historyLoading ? (
+            <div className="emptyProbs">Loading history...</div>
+          ) : historyError ? (
+            <div className="errorBox">{historyError}</div>
+          ) : history.length === 0 ? (
+            <div className="emptyProbs">No prediction history found yet.</div>
+          ) : (
+            <div style={{ display: "grid", gap: "16px" }}>
+              {[...history].reverse().map((item, index) => (
+                <div
+                  key={`${item.timestamp}-${index}`}
+                  style={{
+                    border: "1px solid rgba(255,255,255,0.08)",
+                    borderRadius: "16px",
+                    padding: "16px",
+                    background: "rgba(255,255,255,0.02)",
+                  }}
+                >
+                  <div
+  style={{
+    display: "flex",
+    justifyContent: "space-between",
+    gap: "12px",
+    flexWrap: "wrap",
+    marginBottom: "10px",
+    alignItems: "center",
+  }}
+>
+  <strong>{item.prediction || "No prediction"}</strong>
+
+  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+    <span style={{ opacity: 0.8, fontSize: "14px" }}>
+      {new Date(item.timestamp).toLocaleString()}
+    </span>
+
+    <button
+      type="button"
+      onClick={() => deleteHistoryItem(item.id)}
+      style={{
+        border: "none",
+        borderRadius: "8px",
+        padding: "6px 10px",
+        cursor: "pointer",
+        fontWeight: 600,
+      }}
+    >
+      Delete
+    </button>
+  </div>
+</div>
+                  
+
+                  <div style={{ display: "grid", gap: "6px", marginBottom: "10px" }}>
+                    <div><strong>Model:</strong> {item.selected_model}</div>
+                    <div><strong>Event Type:</strong> {item.features_used?.event_type}</div>
+                    <div><strong>Subtype:</strong> {item.features_used?.event_subtype}</div>
+                    <div><strong>Severity:</strong> {item.features_used?.severity}</div>
+                    <div><strong>Risk:</strong> {item.llm_explanation?.risk_level || "UNKNOWN"}</div>
+                  </div>
+
+                  <div style={{ marginBottom: "10px" }}>
+                    <strong>LLM Explanation:</strong>
+                    <div style={{ marginTop: "6px", opacity: 0.9 }}>
+                      {item.llm_explanation?.explanation_paragraph || "No explanation available."}
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                      gap: "10px",
+                    }}
+                  >
+                    <div>
+                      <strong>CatBoost:</strong> {item.catboost?.predicted_lane_state || "-"}
+                    </div>
+                    <div>
+                      <strong>Random Forest:</strong> {item.rf?.predicted_lane_state || "-"}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
       </Container>
     </div>
   );

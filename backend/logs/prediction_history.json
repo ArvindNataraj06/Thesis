@@ -1,0 +1,40 @@
+[
+  {
+    "id": "80184f66-e263-419f-a029-e03fab55d771",
+    "timestamp": "2026-03-26T16:08:01.143087Z",
+    "selected_model": "both",
+    "features_used": {
+      "event_type": "CONSTRUCTION",
+      "event_subtype": "Long-term construction",
+      "severity": "Moderate",
+      "lane_impact_binary": 1,
+      "created_hour": 8,
+      "is_weekend": 0,
+      "is_night": 0,
+      "planned_duration_hours": 5000.0
+    },
+    "prediction": "SOME_LANES_CLOSED",
+    "catboost": {
+      "predicted_lane_state": "SOME_LANES_CLOSED",
+      "probabilities": {
+        "CLOSED": 0.00029654287259250423,
+        "SINGLE_LANE_ALTERNATING": 0.07264445038491477,
+        "SOME_LANES_CLOSED": 0.9270590067424926
+      }
+    },
+    "rf": {
+      "predicted_lane_state": "SOME_LANES_CLOSED",
+      "probabilities": {
+        "CLOSED": 0.0,
+        "SINGLE_LANE_ALTERNATING": 0.202,
+        "SOME_LANES_CLOSED": 0.798
+      }
+    },
+    "llm_explanation": {
+      "explanation_paragraph": "There is long-term construction on the road, which may cause moderate delays. Please check for updates before traveling. Consider alternative routes if possible.",
+      "risk_level": "MEDIUM",
+      "_latency_ms": 3073
+    },
+    "llm_latency_ms": 3075
+  }
+]
