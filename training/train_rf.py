@@ -9,7 +9,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.pipeline import Pipeline
-from sklearn.metrics import accuracy_score, classification_report
+from sklearn.metrics import accuracy_score, classification_report, ConfusionMatrixDisplay
+import matplotlib.pyplot as plt
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.impute import SimpleImputer
 
@@ -86,6 +87,15 @@ def main():
     print("\n✅ Random Forest Accuracy:", round(acc * 100, 2), "%")
     print("\nClassification report:\n", classification_report(y_test, y_pred))
 
+        # Save confusion matrix figure
+    disp = ConfusionMatrixDisplay.from_estimator(model, X_test, y_test)
+    plt.title("Random Forest Confusion Matrix")
+    plt.tight_layout()
+    plt.savefig(MODELS_DIR / "rf_confusion_matrix.png", dpi=300)
+    plt.close()
+
+    print("📦 Saved confusion matrix to:", MODELS_DIR / "rf_confusion_matrix.png")
+    
     # Save model
     joblib.dump(model, MODELS_DIR / "random_forest_lane_state.joblib")
 
